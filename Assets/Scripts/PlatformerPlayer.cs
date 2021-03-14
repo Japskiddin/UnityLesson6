@@ -36,13 +36,36 @@ public class PlatformerPlayer : MonoBehaviour
             grounded = true; // если под персонажем обнаружен коллайдер
         }
 
+        _body.gravityScale = grounded && deltaX == 0 ? 0 : 1; // остановка при нахождении на поверхности или в статичном состоянии
         if (grounded && Input.GetKeyDown(KeyCode.Space)) {
             _body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse); // сила добавляется только при нажатии клавиши Пробел
         }
 
+        MovingPlatform platform = null;
+        if (hit != null) {
+            platform = hit.GetComponent<MovingPlatform>();
+        }
+        if (platform != null) { // выполняем связывание с платформой или очищаем переменную parent
+            transform.parent = platform.transform;
+        } else {
+            transform.parent = null;
+        }
+
         _anim.SetFloat("speed", Mathf.Abs(deltaX)); // скорость больше нуля даже при отрицательных значениях velocity
+
+        Vector3 pScale = Vector3.one; // при нахождении вне движущейся платформы масштаб по умолчанию равен 1
+        if (platform != null) {
+            pScale = platform.transform.localScale;
+        }
+
+        if (deltaX != 0) {
+            transform.localScale = new Vector3(Mathf.Sign(deltaX) / pScale.x, 1 / pScale.y, 1); // замещаем существующее масштабирование новым
+        }
+
+        /*
         if (!Mathf.Approximately(deltaX, 0)) { // числа типа float не всегда полностью совпадают, поэтому сравним их методом Approximately()
             transform.localScale = new Vector3(Mathf.Sign(deltaX), 1, 1); // в процессе движения масштабируем положительную или отрицательную единицу для поворота направо или налево
         }
+        */
     }
 }
